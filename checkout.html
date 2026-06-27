@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسویه حساب | ASCASE</title>
+<link rel="stylesheet" href="style.css">
+<script src="products-data.js"></script>
+<script src="cart.js"></script>
+<script src="main.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html" class="logo"><span class="mark"></span>ASCASE</a>
+    <nav class="main-nav">
+      <a href="index.html">خانه</a>
+      <a href="products.html">محصولات</a>
+      <a href="products.html?cat=cases">کاور گوشی</a>
+      <a href="gallery.html">نمونه کار</a>
+      <a href="about.html">درباره ما</a>
+      <a href="contact.html">تماس با ما</a>
+    </nav>
+    <div class="header-actions">
+      <a href="cart.html" class="icon-btn" aria-label="سبد خرید">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 4h2l2.4 12.4a2 2 0 0 0 2 1.6h7.2a2 2 0 0 0 2-1.6L20 8H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="20" r="1.4" fill="currentColor"/><circle cx="17" cy="20" r="1.4" fill="currentColor"/></svg>
+        <span class="cart-count">0</span>
+      </a>
+      <button class="nav-toggle" aria-label="منو"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<section class="wrap">
+  <div class="section-head">
+    <div><span class="eyebrow" style="justify-content:flex-start;">CHECKOUT</span><h2>تسویه حساب</h2></div>
+  </div>
+
+  <div id="checkout-area" style="display:grid;grid-template-columns:1.6fr 1fr;gap:32px;align-items:start;">
+    <form class="card" id="checkout-form">
+      <h3 style="font-size:1.02rem;margin-bottom:18px;">اطلاعات گیرنده</h3>
+      <div class="field-row">
+        <div class="field"><label>نام و نام خانوادگی</label><input type="text" required></div>
+        <div class="field"><label>شماره موبایل</label><input type="tel" required pattern="09[0-9]{9}" placeholder="09xxxxxxxxx"></div>
+      </div>
+      <div class="field"><label>آدرس کامل</label><textarea required placeholder="استان، شهر، خیابان، پلاک، واحد"></textarea></div>
+      <div class="field-row">
+        <div class="field"><label>شهر</label><input type="text" required></div>
+        <div class="field"><label>کد پستی</label><input type="text" pattern="[0-9]{10}" placeholder="۱۰ رقم"></div>
+      </div>
+
+      <h3 style="font-size:1.02rem;margin:24px 0 14px;">روش پرداخت</h3>
+      <label class="card" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin-bottom:10px;">
+        <input type="radio" name="pay" checked style="margin-top:4px;">
+        <span>
+          <strong>پرداخت آنلاین (درگاه بانکی)</strong>
+          <p class="text-mist mono" style="font-size:.72rem;margin-top:4px;">DEMO MODE — این بخش هنوز به درگاه واقعی وصل نیست</p>
+        </span>
+      </label>
+      <label class="card" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;">
+        <input type="radio" name="pay" style="margin-top:4px;">
+        <span><strong>پرداخت در محل (کارت‌خوان سیار)</strong></span>
+      </label>
+
+      <button type="submit" class="btn btn-signal btn-block" style="margin-top:24px;">ثبت سفارش</button>
+      <p class="text-mist" style="font-size:.78rem;margin-top:12px;text-align:center;">
+        با ثبت سفارش، قوانین و شرایط فروشگاه را می‌پذیرید.
+      </p>
+    </form>
+
+    <div class="card">
+      <h3 style="font-size:1.02rem;">خلاصه سفارش</h3>
+      <div id="order-items" style="margin-top:16px;display:flex;flex-direction:column;gap:10px;"></div>
+      <div class="flex" style="justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-weight:700;">
+        <span>مبلغ قابل پرداخت</span><span class="mono" id="co-total">0</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-bottom" style="border-top:none;margin-top:0;padding-top:0;">
+      <span>© 2026 ASCASE — ALL RIGHTS RESERVED</span>
+      <span>MADE FOR THOSE WHO DROP THEIR PHONE</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const cart = getCart();
+if(!cart.length){
+  document.getElementById("checkout-area").innerHTML = `
+    <div class="empty-state card" style="grid-column:1/-1;">
+      <p>سبد خریدتون خالیه، اول چند محصول اضافه کنید.</p>
+      <a href="products.html" class="btn btn-dark" style="margin-top:14px;">مشاهده محصولات</a>
+    </div>`;
+} else {
+  document.getElementById("order-items").innerHTML = cart.map(item => {
+    const p = PRODUCTS.find(p => p.id === item.id);
+    if(!p) return "";
+    return `<div class="flex" style="justify-content:space-between;font-size:.85rem;">
+      <span>${p.name} <span class="text-mist">× ${item.qty}</span></span>
+      <span class="mono">${fmtPrice(p.price * item.qty)}</span>
+    </div>`;
+  }).join("");
+  const subtotal = cartTotal();
+  const shipping = 49000;
+  document.getElementById("co-total").textContent = fmtPrice(subtotal + shipping) + " تومان";
+
+  document.getElementById("checkout-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const orderId = "ASC-" + Math.floor(Math.random()*900000 + 100000);
+    saveCart([]);
+    document.querySelector("section.wrap").innerHTML = `
+      <div class="card center" style="padding:60px 24px;max-width:520px;margin:0 auto;">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--signal);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:1.6rem;">✓</div>
+        <h2 style="font-size:1.4rem;">سفارش شما ثبت شد</h2>
+        <p class="text-mist" style="margin-top:10px;">کد پیگیری: <span class="mono">${orderId}</span></p>
+        <p class="text-mist" style="margin-top:10px;font-size:.85rem;">
+          این یک فرم نمایشی است — برای فعال شدن پرداخت واقعی، فروشگاه باید به یک درگاه بانکی متصل شود.
+        </p>
+        <a href="index.html" class="btn btn-dark" style="margin-top:20px;">بازگشت به صفحه اصلی</a>
+      </div>`;
+  });
+}
+</script>
+</body>
+</html>
