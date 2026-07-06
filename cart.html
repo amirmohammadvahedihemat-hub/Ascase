@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سبد خرید - ASCASE</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <a href="/" class="logo"><span class="logo-mark"></span>ASCASE</a>
+    <nav class="nav">
+      <a href="/">خانه</a>
+      <a href="/#products">محصولات</a>
+    </nav>
+    <div class="header-right">
+      <button class="icon-btn dark-toggle">🌙</button>
+    </div>
+  </div>
+</header>
+
+<section class="section">
+  <div class="section-head" style="text-align: left;">
+    <span class="tag">🛒</span>
+    <h2>سبد خرید</h2>
+  </div>
+
+  <div id="cart-container" style="max-width: 900px;">
+    <div id="cart-items"></div>
+    <div id="cart-summary" style="background: var(--bg-secondary); padding: 24px; border-radius: 14px; margin-top: 30px; text-align: center;">
+      <p style="margin: 0 0 10px 0; color: var(--text-light);">مجموع</p>
+      <p style="margin: 0; font-size: 28px; font-weight: 800;" id="total">0</p>
+      <button onclick="alert('درگاه پرداخت به‌زودی')" class="btn btn-primary" style="margin-top: 20px; width: 100%;">ادامه به پرداخت</button>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-bottom">© 2026 ASCASE</div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script>
+function renderCart() {
+  const cart = getCart();
+  const el = document.getElementById('cart-items');
+  
+  if (!cart.length) {
+    el.innerHTML = `<div style="text-align: center; padding: 60px 20px;">
+      <p style="color: var(--text-light); font-size: 16px; margin: 0 0 20px 0;">سبد خریدت خالیه</p>
+      <a href="/" class="btn btn-primary">مشاهده محصولات</a>
+    </div>`;
+    document.getElementById('cart-summary').style.display = 'none';
+    return;
+  }
+
+  let total = 0;
+  el.innerHTML = cart.map(item => {
+    const p = PRODUCTS_DATA.find(x => x.id === item.id);
+    if (!p) return '';
+    const price = p.price * item.qty;
+    total += price;
+    return `
+    <div style="background: var(--bg-secondary); padding: 20px; border-radius: 10px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h4 style="margin: 0 0 6px 0;">${p.name}</h4>
+        <p style="margin: 0; color: var(--text-light); font-size: 13px;">${p.cat}</p>
+      </div>
+      <div style="text-align: right;">
+        <div style="margin-bottom: 8px;">
+          <button onclick="updateQty(${p.id}, ${item.qty - 1})" style="width: 28px; height: 28px; border: 1px solid var(--border); background: transparent; border-radius: 6px; cursor: pointer;">−</button>
+          <span style="margin: 0 8px;">${item.qty}</span>
+          <button onclick="updateQty(${p.id}, ${item.qty + 1})" style="width: 28px; height: 28px; border: 1px solid var(--border); background: transparent; border-radius: 6px; cursor: pointer;">+</button>
+        </div>
+        <p style="margin: 0; font-weight: 700; font-size: 16px;">${price.toLocaleString('fa-IR')}</p>
+        <button onclick="removeItem(${p.id})" style="background: none; border: none; color: var(--primary); cursor: pointer; margin-top: 4px; font-size: 13px;">حذف</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('total').textContent = total.toLocaleString('fa-IR') + ' تومان';
+}
+
+function updateQty(id, qty) {
+  if (qty <= 0) {
+    removeItem(id);
+  } else {
+    const cart = getCart();
+    const item = cart.find(i => i.id === id);
+    if (item) item.qty = qty;
+    saveCart(cart);
+    renderCart();
+  }
+}
+
+function removeItem(id) {
+  let cart = getCart().filter(i => i.id !== id);
+  saveCart(cart);
+  renderCart();
+}
+
+renderCart();
+</script>
+
+</body>
+</html>
