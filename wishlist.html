@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>علاقه‌مندی‌ها | ASCASE V2</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-wrap">
+    <a href="index.html" class="logo"><span class="logo-mark"></span>ASCASE</a>
+    <nav class="nav-items">
+      <a href="index.html">خانه</a>
+      <a href="products.html">محصولات</a>
+    </nav>
+    <div style="flex:1;"></div>
+    <div class="header-actions">
+      <button class="icon-btn dark-toggle">☀️/🌙</button>
+      <a href="cart.html" class="icon-btn">🛒<span class="badge" style="display:none;">0</span></a>
+    </div>
+  </div>
+</header>
+
+<section class="section">
+  <div class="section-head">
+    <div class="eyebrow">❤️ علاقه‌مندی</div>
+    <h2>محصولات مورد علاقه‌تون</h2>
+  </div>
+  <div class="grid grid-4" id="wishlist-list"></div>
+</section>
+
+<footer class="site-footer">
+  <div class="footer-bottom">
+    <span>© 2026 ASCASE V2</span>
+  </div>
+</footer>
+
+<script src="products-data.js"></script>
+<script src="app.js"></script>
+<script>
+const wishlist = getWishlist();
+const wishlisted = PRODUCTS.filter(p => wishlist.includes(p.id));
+renderProducts(wishlisted.length ? wishlisted : [], '#wishlist-list');
+</script>
+</body>
+</html>

@@ -1,192 +1,221 @@
-/* ASCASE PRO - Production Ready JS */
+/* ============================================================
+   ASCASE V2 — Advanced Features
+   Dark Mode, Live Search, Wishlist, Animations, Smart Cart
+   ============================================================ */
 
-const PRODUCTS_DATA = [
-  { id: 1, name: 'کاور آرمور', cat: 'کاور', price: 289000, old: 349000, badge: 'پرفروش', specs: ['DROP 2.4m', '1.1mm'] },
-  { id: 2, name: 'کاور شفاف', cat: 'کاور', price: 129000, specs: ['DROP 1.5m', '0.9mm'] },
-  { id: 3, name: 'کاور چرمی', cat: 'کاور', price: 349000, badge: 'جدید', specs: ['DROP 1.8m', '1.0mm'] },
-  { id: 4, name: 'گوشی X12', cat: 'موبایل', price: 48900000, badge: 'پرفروش', specs: ['8GB', '256GB'] },
-  { id: 5, name: 'گوشی Nova', cat: 'موبایل', price: 21900000, specs: ['6GB', '128GB'] },
-  { id: 6, name: 'محافظ صفحه', cat: 'محافظ', price: 99000, specs: ['9H', '99.9%'] },
-  { id: 7, name: 'شارژر 30W', cat: 'شارژر', price: 289000, badge: 'پرفروش', specs: ['PD', '100W'] },
-  { id: 8, name: 'ایرپاد', cat: 'صوت', price: 1290000, specs: ['ANC', '28h'] },
-  { id: 9, name: 'پاوربانک 20000', cat: 'پاوربانک', price: 990000, badge: 'جدید', specs: ['20000mA', '22.5W'] },
-  { id: 10, name: 'کاور استند', cat: 'کاور', price: 319000, specs: ['STAND', 'MAGNET'] },
-  { id: 11, name: 'کاور رنگی', cat: 'کاور', price: 179000, specs: ['رنگی', 'سیلیکون'] },
-  { id: 12, name: 'گلاس 9H', cat: 'محافظ', price: 79000, specs: ['9H', 'EDGE'] },
-];
+/* Dark Mode Toggle */
+const darkModeToggle = document.querySelector('.dark-toggle');
+const html = document.documentElement;
 
-// DOM Elements
-const header = document.querySelector('.header');
-const darkToggle = document.querySelector('.dark-toggle');
-const searchInput = document.querySelector('.search-input');
-const searchResults = document.querySelector('.search-results');
-const cartBtn = document.querySelector('[data-cart-btn]');
-const cartBadge = document.querySelector('.icon-btn .badge');
-
-// Dark Mode
-function initDarkMode() {
-  const isDark = localStorage.getItem('ascase-dark') === 'true';
-  if (isDark) document.documentElement.classList.add('dark');
+function initDarkMode(){
+  const saved = localStorage.getItem('ascase-dark-mode');
+  if(saved === 'true' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)){
+    html.classList.add('dark-mode');
+  }
 }
 
-if (darkToggle) {
-  darkToggle.addEventListener('click', () => {
-    document.documentElement.classList.toggle('dark');
-    const isDark = document.documentElement.classList.contains('dark');
-    localStorage.setItem('ascase-dark', isDark);
+if(darkModeToggle){
+  darkModeToggle.addEventListener('click', () => {
+    html.classList.toggle('dark-mode');
+    localStorage.setItem('ascase-dark-mode', html.classList.contains('dark-mode'));
   });
 }
 
-// Header Scroll
-window.addEventListener('scroll', () => {
-  if (window.scrollY > 50) {
-    header.classList.add('scrolled');
-  } else {
-    header.classList.remove('scrolled');
-  }
-});
+/* Intersection Observer for reveal animations */
+const observerOptions = { threshold: .15, rootMargin: '0px 0px -50px 0px' };
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting){
+      e.target.classList.add('in-view');
+      observer.unobserve(e.target);
+    }
+  });
+}, observerOptions);
 
-// Cart Management
-function getCart() {
-  try {
-    return JSON.parse(localStorage.getItem('ascase-cart')) || [];
-  } catch (e) {
-    return [];
-  }
-}
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-function saveCart(cart) {
-  try {
-    localStorage.setItem('ascase-cart', JSON.stringify(cart));
-    updateCartBadge();
-  } catch (e) {}
-}
+/* Live Search */
+const searchInput = document.querySelector('.search-input');
+const searchResults = document.querySelector('.search-results');
 
-function addToCart(id, qty = 1) {
-  const cart = getCart();
-  const item = cart.find(i => i.id === id);
-  if (item) {
-    item.qty += qty;
-  } else {
-    cart.push({ id, qty });
-  }
-  saveCart(cart);
-  showToast('به سبد اضافه شد ✓');
-}
-
-function updateCartBadge() {
-  const cart = getCart();
-  const count = cart.reduce((s, i) => s + i.qty, 0);
-  if (cartBadge) {
-    cartBadge.textContent = count;
-    cartBadge.style.display = count > 0 ? 'flex' : 'none';
-  }
-}
-
-// Live Search
-if (searchInput) {
+if(searchInput && PRODUCTS){
   searchInput.addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase().trim();
-    if (q.length < 2) {
-      searchResults.classList.remove('active');
+    const query = e.target.value.toLowerCase();
+    if(query.length < 2){
+      searchResults?.classList.remove('open');
       return;
     }
-    
-    const matches = PRODUCTS_DATA.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.cat.toLowerCase().includes(q)
+    const matches = PRODUCTS.filter(p =>
+      p.name.toLowerCase().includes(query) ||
+      p.cat.toLowerCase().includes(query)
     ).slice(0, 6);
-    
-    if (matches.length) {
+
+    if(matches.length){
       searchResults.innerHTML = matches.map(p => `
-        <a href="#product-${p.id}" class="search-item">
-          <div style="font-weight: 600; font-size: 14px;">${p.name}</div>
-          <div style="font-size: 12px; color: var(--text-light);">${p.cat} — ${(p.price).toLocaleString('fa-IR')}</div>
+        <a href="product.html?id=${p.id}" class="search-item">
+          <div style="font-weight:600;font-size:.9rem;">${p.name}</div>
+          <div style="font-size:.75rem;color:var(--text-secondary);">
+            ${categoryTitle(p.cat)} — ${fmtPrice(p.price)}
+          </div>
         </a>
       `).join('');
-      searchResults.classList.add('active');
+      searchResults?.classList.add('open');
     }
   });
 
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.search-box')) {
-      searchResults.classList.remove('active');
+    if(!e.target.closest('.search-container')){
+      searchResults?.classList.remove('open');
     }
   });
 }
 
-// Toast Notification
-function showToast(msg) {
-  const existing = document.querySelector('.toast');
-  if (existing) existing.remove();
-  
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  
-  setTimeout(() => toast.remove(), 2500);
+/* Wishlist (LocalStorage) */
+const WISHLIST_KEY = 'ascase-wishlist';
+
+function getWishlist(){
+  try{ return JSON.parse(localStorage.getItem(WISHLIST_KEY)) || []; }
+  catch{ return []; }
 }
 
-// Wishlist
-function toggleWishlist(id) {
-  const wishlist = JSON.parse(localStorage.getItem('ascase-wishlist') || '[]');
-  const idx = wishlist.indexOf(id);
-  if (idx > -1) {
-    wishlist.splice(idx, 1);
+function saveWishlist(list){
+  try{ localStorage.setItem(WISHLIST_KEY, JSON.stringify(list)); }catch(e){}
+}
+
+function toggleWishlist(productId){
+  const list = getWishlist();
+  const idx = list.indexOf(productId);
+  if(idx > -1) list.splice(idx, 1);
+  else list.push(productId);
+  saveWishlist(list);
+  updateWishlistUI();
+}
+
+function isWishlisted(productId){
+  return getWishlist().includes(productId);
+}
+
+function updateWishlistUI(){
+  document.querySelectorAll('.wishlist-btn').forEach(btn => {
+    const id = btn.dataset.productId;
+    if(isWishlisted(id)){
+      btn.classList.add('liked');
+      btn.innerHTML = '❤️';
+    } else {
+      btn.classList.remove('liked');
+      btn.innerHTML = '🤍';
+    }
+  });
+}
+
+/* Header scroll effect */
+const header = document.querySelector('.site-header');
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  lastScroll = window.scrollY;
+  if(lastScroll > 50){
+    header?.classList.add('scrolled');
   } else {
-    wishlist.push(id);
+    header?.classList.remove('scrolled');
   }
-  localStorage.setItem('ascase-wishlist', JSON.stringify(wishlist));
-  updateWishlistUI(id);
+});
+
+/* Toast notification */
+function showToast(msg){
+  let toast = document.querySelector('.toast');
+  if(!toast){
+    toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<span class="toast-dot"></span><span>${msg}</span>`;
+    document.body.appendChild(toast);
+  } else {
+    toast.querySelector('span:last-child').textContent = msg;
+  }
+  toast.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
-function isWishlisted(id) {
-  const wishlist = JSON.parse(localStorage.getItem('ascase-wishlist') || '[]');
-  return wishlist.includes(id);
+/* Cart */
+const CART_KEY = 'ascase-cart-v2';
+
+function getCart(){
+  try{ return JSON.parse(localStorage.getItem(CART_KEY)) || []; }
+  catch{ return []; }
 }
 
-function updateWishlistUI(id) {
-  const btn = document.querySelector(`[data-like-btn="${id}"]`);
-  if (btn) {
-    btn.textContent = isWishlisted(id) ? '❤️' : '🤍';
+function saveCart(cart){
+  try{ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }catch(e){}
+  updateCartBadge();
+}
+
+function addToCart(productId, qty = 1){
+  const cart = getCart();
+  const existing = cart.find(i => i.id === productId);
+  if(existing) existing.qty += qty;
+  else cart.push({ id: productId, qty });
+  saveCart(cart);
+  showToast(`${qty} محصول به سبد اضافه شد`);
+}
+
+function updateCartBadge(){
+  const badge = document.querySelector('.badge');
+  if(badge){
+    const count = getCart().reduce((s,i) => s + i.qty, 0);
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'flex' : 'none';
   }
 }
 
-// Render Product Card
-function renderProductCard(p) {
+/* Initialize on load */
+document.addEventListener('DOMContentLoaded', () => {
+  initDarkMode();
+  updateWishlistUI();
+  updateCartBadge();
+});
+
+/* Product card rendering */
+function renderProductCard(p){
   const wishlisted = isWishlisted(p.id);
-  const oldPrice = p.old ? `<span class="price-old">${(p.old).toLocaleString('fa-IR')}</span>` : '';
+  const oldPrice = p.oldPrice ? `<span class="price-old">${fmtPrice(p.oldPrice)}</span>` : '';
   const badge = p.badge ? `<div class="product-badge">${p.badge}</div>` : '';
-  const specs = p.specs.map(s => `<span class="spec">${s}</span>`).join('');
+  const specs = p.specs.map(s => `<span class="spec-tag">${s[0]}</span>`).join('');
   
   return `
-  <div class="product" id="product-${p.id}">
-    <div class="product-image">
+  <article class="product-card reveal">
+    <a href="product.html?id=${p.id}" class="product-media">
       ${badge}
-      <button class="product-like" data-like-btn="${p.id}" onclick="toggleWishlist(${p.id})">
+      <button class="wishlist-btn" data-product-id="${p.id}" onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('${p.id}')">
         ${wishlisted ? '❤️' : '🤍'}
       </button>
-      <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-        <rect x="14" y="6" width="92" height="108" rx="16" stroke="var(--primary)" stroke-width="2" fill="none"/>
-      </svg>
-    </div>
-    <div class="product-info">
-      <span class="product-cat">${p.cat}</span>
-      <h3 class="product-name">${p.name}</h3>
+      ${svgIcon(p.icon, p.accent)}
+    </a>
+    <div class="product-body">
+      <span class="product-cat">${categoryTitle(p.cat)}</span>
+      <a href="product.html?id=${p.id}"><h3 class="product-name">${p.name}</h3></a>
       <div class="product-specs">${specs}</div>
       <div class="product-footer">
-        <span class="price">${oldPrice}${(p.price).toLocaleString('fa-IR')}</span>
-        <button class="cart-btn" onclick="addToCart(${p.id})" title="افزودن به سبد">
-          +
+        <span class="price">${oldPrice}${fmtPrice(p.price)}</span>
+        <button class="add-to-cart-btn" onclick="addToCart('${p.id}',1); return false;" aria-label="افزودن به سبد">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
       </div>
     </div>
-  </div>`;
+  </article>`;
 }
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-  initDarkMode();
-  updateCartBadge();
-});
+function renderProducts(list, selector){
+  const el = document.querySelector(selector);
+  if(!el) return;
+  if(!list.length){
+    el.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;">
+      <p style="color:var(--text-secondary);margin:0;">محصولی پیدا نشد</p>
+    </div>`;
+    return;
+  }
+  el.innerHTML = list.map(renderProductCard).join('');
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+}
+
+/* Auto-update cart badge on visibility change */
+document.addEventListener('visibilitychange', updateCartBadge);
